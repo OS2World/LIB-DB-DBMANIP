@@ -1,0 +1,20 @@
+# IBM Developer's Workframe/2 Make File Creation run at 22:46:35 on 07/14/92
+
+# Make File Creation run in directory:
+#   F:\DBPUBLIC;
+
+# Assumed INCLUDE environment variable path:
+#   F:\IBMC\INCLUDE;
+#   F:\TOOLKT20\C\OS2H;
+#   F:\GPF\INCLUDE;
+
+
+DBMANIP.OBJ:  DBMANIP.C  \
+#  {$(INCLUDE);}os2.h  \
+#  {$(INCLUDE);}stdio.h  \
+#  {$(INCLUDE);}stdlib.h  \
+#  {$(INCLUDE);}string.h  \
+#  {$(INCLUDE);}math.h  \
+   {.;$(INCLUDE);}dbmanip.h  \
+   {.;$(INCLUDE);}dberr.h  \
+   DBMANIP.MAK
