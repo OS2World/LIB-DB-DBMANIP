@@ -1,0 +1,256 @@
+DBMANIP Dbase3 functions brought to you by WalkerWerks, Memphis, Tn.
+
+Files
+	DBMANIP.C		functions for manipulating DB3 files
+	DBPROCS.H		function declerations and global variables
+	DBERR.H 		The defines for the database errors
+	DBINC.H 		The header file for use by programs using the DLL.
+	DBPROCS.DEF 	Definition file for OS/2
+	DBPROCS.MAK 	Microsoft C 6.0 make file
+	DBPROCS.LIB 	Import library for DLL to link with programs using DLL
+	DBPROCS.DLL 	DLL library containing DBMANIP functions
+
+DBMANIP is a set of basic functions for manipulating DBase3 or 3+ files.
+No index functions are included.  The code is released to the Public
+Domain as is.  The Author takes no responsibility for its use or any
+damages resulting from the original or altered copies of the routines.
+I only ask that if you add functions you provide a copy to me and the
+public domain to provide access to DB3 files from OS/2.  Please message
+Compuserve 70304,2705 with suggestions or changes that might help us
+all.
+
+All functions are reentrant and use OS/2 1.x procedures.  All OS/2
+specific functions are isolated in subroutines at the end of the file
+for ease in porting to 2.x when Cset/2 is commercially available.
+
+The functions are basic.  Several improvements could be used such as
+handling the various date types.  Currently only MM/DD/YYYY format is
+supported.	In addition numeric fields could be improved to convert from
+Numerics to text data and the reverse when retrieving fields.  The functions
+could also use better error trapping when manipulating the passed data
+strings.
+
+
+LINKING Note
+	The DLL has several global variables for managing the databases.
+	Because of this the Data Segment pointer must be loaded at entry
+	which is not the default in Microsoft C 6.0 for DLL's.  In C 6
+	this is accomplished with a custom memory model of lfu.
+
+
+FUNCTIONS
+
+SHORT EXPENTRY DbCreate(CHAR *file, SHORT fldcount, FLDDATA *info)
+
+Creates an empty DBase 3 database, even if one of the same name currently
+exists.
+
+file	A NULL terminated string of the database name.	If no extension
+		is given .DBF is appended.
+
+fldcount	The number of fields for the database.
+
+info	A pointer to an array of fldcount structures of type FLDDATA.
+		These must contain the information about the field.
+
+Returns 0 if successful or an errorcode if not.
+
+This function does not open the created database.
+
+
+
+SHORT EXPENTRY DbOpen(CHAR *file, SHORT readwrite)
+
+Opens the requested database.
+
+file	A null terminated string of the database name.	If no extension
+		is given .DBF is appended.
+
+readwrite	SHORT value of access authority 0 is readonly, nonzero is
+			readwrite priveledges.
+
+Returns Non negative value is the handle for the selected database.
+		Negative value is an error code.
+
+
+SHORT EXPENTRY DbClose(SHORT dbhndl)
+
+Closes the indicated database.
+
+dbhndl	The handle returned by DbOpen
+
+Returns 0 = Success  Non Zero is an error code.
+
+
+
+SHORT EXPENTRY DbInfo(SHORT hndl, DBREPORT *info)
+
+Provides header information about the indicated database.
+
+hndl	The handle returned by DbOpen
+
+info	A pointer to a structure of the type DBREPORT
+
+Returns 0 = SUCCESS  Nonzero error code
+
+
+SHORT EXPENTRY FldInfo(SHORT hndl, SHORT fldnum, FLDDATA FAR *fldinfo)
+
+Returns information about the selected field within the indicated
+database.
+
+hndl	The database handle
+fldnum	The field to report about.	Fields are zero based.
+fldinfo A pointer to a structure of type FLDDATA for returning the
+		information.
+
+Returns 0 for Success or an Error code.
+
+
+SHORT EXPENTRY AddRec(SHORT dbhndl, CHAR *recdata,
+					  LONG *recnum, SHORT lockstatus)
+
+Adds a new record to the database.	Additionally can lock the new record
+upon return.  The number of the new record is returned in recnum.
+
+dbhndl	The database handle
+
+recdata A pointer to the new record.  This must be properly formatted in
+		Dbase3's record layout.  If this is set to NULL a new blank record
+		will be appended to the file.
+
+recnum	Pointer to a LONG for returning the record number of the new record
+
+lockstatus	0 do not lock the record on return, 1 lock the record on return.
+			If you lock the record you must unlock it before other processes
+			can access the record.
+
+Returns 	0 for success or an error code
+
+
+SHORT EXPENTRY PutRec(SHORT dbhndl, CHAR *recdata, LONG recnum)
+
+Replaces an existing record with the record data pointed to by recdata.
+
+dbhndl		the handle of the database
+
+recdata 	A pointer to the Dbase3 record.
+
+recnum		The record number to update.
+
+Returns 	0 for success or an error code
+
+
+SHORT EXPENTRY GetRec(SHORT dbhndl, CHAR *recdata, LONG recnum)
+
+Retrieves the requested record and copies it into the buffer pointed
+to by recdata.
+
+dbhndl		The handle of the database.
+
+recdata 	The buffer for the record.	You must insure that it is
+			sufficiently large, no overflow checking is done by the
+			routine.
+
+recnum		The record to retrieve
+
+Returns 	0 for success or an error code
+
+
+SHORT EXPENTRY DeleteRec(SHORT dbhndl, LONG recnum)
+
+Deletes the selected record.  Records are not actually deleted in DBase
+files, the first byte is set to an asterisk (*).
+
+dbhndl	The database handle
+
+recnum	The record number to delete
+
+Returns 	0 for success or an error code
+
+
+SHORT EXPENTRY RecoverRec(SHORT dbhndl, LONG recnum)
+
+Unmarks the selected record as deleted.
+
+dbhndl	The database handle
+
+recnum	The record number to activate
+
+Returns 	0 for success or an error code
+
+
+SHORT EXPENTRY CheckRec(SHORT dbhndl, LONG recnum)
+
+Checks the selected record to see if it is marked as active or
+deleted.
+
+dbhndl	The database handle
+
+recnum	The record number to activate
+
+Returns 	0 if the record is inactive, 1 if active, or a negative
+			value error code.
+
+
+SHORT EXPENTRY LockRec(SHORT dbhndl, LONG recnum)
+
+Locks the selected record so that other processes cannot read or write
+to the record.	This is commonly used when updating a record so that
+multiple processes will not alter the data and get the changes out of
+sinc.
+
+dbhndl	the database handle
+
+recnum	The record number
+
+Returns 	0 for success or an error code
+
+
+SHORT EXPENTRY UnLockRec(SHORT dbhndl, LONG recnum)
+
+Unlocks a record so that other processes can read and write to the
+record.
+
+dbhndl	The database handle
+
+recnum	The record number
+
+Returns 	0 for success or an error code
+
+
+SHORT EXPENTRY GetField(SHORT dbhndl, LONG recnum, CHAR *buff, SHORT fldnm)
+
+Retrieves the specified field from the selected record.  Returns the
+field in the buffer pointed to by buff.  You must ensure that the
+buffer is sufficient to contain the record.  All data is left justified
+and any trailing spaces are removed.  All dates are returned in the
+format MM/DD/YYYY.
+
+dbhndl	The database handle
+
+recnum	The record number
+
+buff	The buffer for the field contents
+
+fldnum	The field number, Fields are zero based
+
+Returns 	0 for success or an error code.
+
+
+SHORT EXPENTRY PutField(SHORT dbhndl, LONG recnum, CHAR *buff, SHORT fldnm)
+
+Puts the data in buff into the proper format and writes it into the
+field specified.  All numbers are right justified and space padded.
+Dates MUST be in the format MM/DD/YY or MM/DD/YYYY.  If the former date
+format is used the century will be set to 1900.  All data is text data.
+
+dbhndl	The database handle
+
+recnum	The record number
+
+buff	A null terminated string of the data to place in the selected field.
+
+fldnm	The field number to update.
+
+Returns 	0 for success or an error code.
